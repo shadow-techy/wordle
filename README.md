@@ -1,2 +1,3 @@
-# wordle
-Hier kommt ein Code hin, womit Leute Wordle spielen könne
+# pnp wordle
+Hier ist der Code, womit alle wordle spielen können :)
+
