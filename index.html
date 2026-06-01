@@ -5,20 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dein Custom Wordle</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121213; color: white; text-align: center; }
+        body { font-family: Arial, sans-serif; background: #121213; color: white; text-align: center; margin: 0; padding: 20px; }
         #game { max-width: 600px; margin: 20px auto; }
         .row { display: flex; justify-content: center; margin-bottom: 5px; }
         .tile { width: 50px; height: 50px; border: 2px solid #3a3a3c; margin: 0 3px;
                 display: flex; align-items: center; justify-content: center; 
                 font-size: 24px; font-weight: bold; text-transform: uppercase; }
-        .correct { background-color: #538d4e; border-color: #538d4e; }
-        .present { background-color: #b59f3b; border-color: #b59f3b; }
-        .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
-        input { font-size: 18px; padding: 10px; text-transform: uppercase; width: 200px; text-align: center; margin-bottom: 10px; }
-        button { font-size: 18px; padding: 10px; cursor: pointer; background: #538d4e; color: white; border: none; font-weight: bold; border-radius: 5px; }
-        button:hover { background: #43733f; }
-        #shareBtn { display: none; margin: 20px auto; background: #007eed; }
+        
+        /* Farben für Spielfeld und Tastatur */
+        .correct { background-color: #538d4e !important; border-color: #538d4e !important; color: white; }
+        .present { background-color: #b59f3b !important; border-color: #b59f3b !important; color: white; }
+        .absent { background-color: #3a3a3c !important; border-color: #3a3a3c !important; color: white; }
+        
+        /* Virtuelle Tastatur */
+        #keyboard { max-width: 500px; margin: 30px auto 20px auto; }
+        .kb-row { display: flex; justify-content: center; margin-bottom: 8px; }
+        .key { background-color: #818384; color: white; border: none; font-weight: bold;
+               height: 58px; margin: 0 4px; border-radius: 4px; cursor: pointer;
+               display: flex; align-items: center; justify-content: center; 
+               flex: 1; font-size: 14px; text-transform: uppercase; user-select: none; }
+        .key.wide { flex: 1.5; font-size: 12px; }
+        
+        /* Teilen Button */
+        #shareBtn { display: none; margin: 20px auto; background: #007eed; color: white; font-size: 18px; 
+                    padding: 12px 24px; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
         #shareBtn:hover { background: #0065be; }
+        #message { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -26,10 +38,44 @@
     <h1>Tägliches Wordle Challenge!</h1>
     <div id="game"></div>
     
-    <div id="input-area">
-        <input type="text" id="guessInput" placeholder="Dein Tipp">
-        <br>
-        <button onclick="makeGuess()">Tippen</button>
+    <div id="keyboard">
+        <div class="kb-row">
+            <button class="key" onclick="pressKey('Q')">Q</button>
+            <button class="key" onclick="pressKey('W')">W</button>
+            <button class="key" onclick="pressKey('E')">E</button>
+            <button class="key" onclick="pressKey('R')">R</button>
+            <button class="key" onclick="pressKey('T')">T</button>
+            <button class="key" onclick="pressKey('Z')">Z</button>
+            <button class="key" onclick="pressKey('U')">U</button>
+            <button class="key" onclick="pressKey('I')">I</button>
+            <button class="key" onclick="pressKey('O')">O</button>
+            <button class="key" onclick="pressKey('P')">P</button>
+            <button class="key" onclick="pressKey('Ü')">Ü</button>
+        </div>
+        <div class="kb-row">
+            <button class="key" onclick="pressKey('A')">A</button>
+            <button class="key" onclick="pressKey('S')">S</button>
+            <button class="key" onclick="pressKey('D')">D</button>
+            <button class="key" onclick="pressKey('F')">F</button>
+            <button class="key" onclick="pressKey('G')">G</button>
+            <button class="key" onclick="pressKey('H')">H</button>
+            <button class="key" onclick="pressKey('J')">J</button>
+            <button class="key" onclick="pressKey('K')">K</button>
+            <button class="key" onclick="pressKey('L')">L</button>
+            <button class="key" onclick="pressKey('Ö')">Ö</button>
+            <button class="key" onclick="pressKey('Ä')">Ä</button>
+        </div>
+        <div class="kb-row">
+            <button class="key wide" onclick="pressKey('ENTER')">ENTER</button>
+            <button class="key" onclick="pressKey('Y')">Y</button>
+            <button class="key" onclick="pressKey('X')">X</button>
+            <button class="key" onclick="pressKey('C')">C</button>
+            <button class="key" onclick="pressKey('V')">V</button>
+            <button class="key" onclick="pressKey('B')">B</button>
+            <button class="key" onclick="pressKey('N')">N</button>
+            <button class="key" onclick="pressKey('M')">M</button>
+            <button class="key wide" onclick="pressKey('BACK')">⌫</button>
+        </div>
     </div>
 
     <h2 id="message"></h2>
@@ -50,13 +96,13 @@
 
         const WORD_LENGTH = targetWord.length;
         const MAX_GUESSES = 6;
+        
         let guesses = [];
-        let shareGrid = []; // Speichert die Emoji-Quadrate für das Teilen
+        let currentGuess = "";
+        let isGameOver = false;
+        let shareGrid = [];
 
-        const inputField = document.getElementById('guessInput');
-        inputField.maxLength = WORD_LENGTH;
-        inputField.placeholder = `${WORD_LENGTH} Buchstaben`;
-
+        // Spielfeld dynamisch aufbauen
         const gameDiv = document.getElementById('game');
         for (let i = 0; i < MAX_GUESSES; i++) {
             let row = document.createElement('div');
@@ -70,69 +116,110 @@
             gameDiv.appendChild(row);
         }
 
-        function makeGuess() {
-            const input = document.getElementById('guessInput');
-            let guess = input.value.toUpperCase().trim();
-            
-            if (guess.length !== WORD_LENGTH) {
-                alert(`Das Wort muss exakt ${WORD_LENGTH} Buchstaben haben!`);
-                return;
-            }
+        // Event-Listener für echte PC-Tastatur
+        window.addEventListener('keydown', (e) => {
+            if (isGameOver) return;
+            if (e.key === 'Enter') pressKey('ENTER');
+            else if (e.key === 'Backspace') pressKey('BACK');
+            else if (/^[a-zA-ZäöüÄÖÜß]$/.test(e.key)) pressKey(e.key.toUpperCase());
+        });
 
+        function pressKey(key) {
+            if (isGameOver) return;
             let currentRow = guesses.length;
-            if (currentRow >= MAX_GUESSES) return;
 
-            guesses.push(guess);
-            input.value = "";
-
-            let rowEmojis = "";
-
-            // Buchstaben prüfen und färben
-            for (let i = 0; i < WORD_LENGTH; i++) {
-                let tile = document.getElementById(`tile-${currentRow}-${i}`);
-                tile.innerText = guess[i];
-
-                if (guess[i] === targetWord[i]) {
-                    tile.classList.add('correct');
-                    rowEmojis += "🟩";
-                } else if (targetWord.includes(guess[i])) {
-                    tile.classList.add('present');
-                    rowEmojis += "🟨";
+            if (key === 'ENTER') {
+                if (currentGuess.length === WORD_LENGTH) {
+                    submitGuess();
                 } else {
-                    tile.classList.add('absent');
-                    rowEmojis += "⬛";
+                    alert(`Das Wort muss exakt ${WORD_LENGTH} Buchstaben haben!`);
+                }
+            } else if (key === 'BACK') {
+                if (currentGuess.length > 0) {
+                    currentGuess = currentGuess.slice(0, -1);
+                    updateRowDisplay(currentRow);
+                }
+            } else {
+                if (currentGuess.length < WORD_LENGTH && key.length === 1) {
+                    currentGuess += key;
+                    updateRowDisplay(currentRow);
                 }
             }
-            
+        }
+
+        function updateRowDisplay(row) {
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                let tile = document.getElementById(`tile-${row}-${i}`);
+                tile.innerText = currentGuess[i] || "";
+            }
+        }
+
+        function submitGuess() {
+            let currentRow = guesses.length;
+            guesses.push(currentGuess);
+            let rowEmojis = "";
+
+            // Buchstaben prüfen, färben und Tastatur updaten
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                let letter = currentGuess[i];
+                let tile = document.getElementById(`tile-${currentRow}-${i}`);
+                
+                let statusClass = "absent";
+                if (letter === targetWord[i]) {
+                    statusClass = "correct";
+                    rowEmojis += "🟩";
+                } else if (targetWord.includes(letter)) {
+                    statusClass = "present";
+                    rowEmojis += "🟨";
+                } else {
+                    rowEmojis += "⬛";
+                }
+
+                tile.classList.add(statusClass);
+                updateKeyboardKey(letter, statusClass);
+            }
+
             shareGrid.push(rowEmojis);
 
-            // Gewinn / Verlust prüfen
-            if (guess === targetWord) {
+            if (currentGuess === targetWord) {
                 document.getElementById('message').innerText = "🎉 Gewonnen!";
                 endGame();
             } else if (guesses.length >= MAX_GUESSES) {
                 document.getElementById('message').innerText = `😢 Verloren! Das Wort war: ${targetWord}`;
                 endGame();
             }
+
+            currentGuess = ""; // Bereit für die nächste Reihe
+        }
+
+        function updateKeyboardKey(letter, status) {
+            // Sucht den Button auf der virtuellen Tastatur
+            const buttons = document.querySelectorAll('.key');
+            for (let btn of buttons) {
+                if (btn.innerText === letter) {
+                    // Ein grüner Status überschreibt alles, gelb überschreibt grau
+                    if (btn.classList.contains('correct')) return;
+                    if (btn.classList.contains('present') && status === 'absent') return;
+
+                    btn.classList.remove('present', 'absent');
+                    btn.classList.add(status);
+                    break;
+                }
+            }
         }
 
         function endGame() {
-            document.getElementById('input-area').style.display = 'none';
-            // Zeigt den Teilen-Button an, wenn das Spiel vorbei ist
+            isGameOver = true;
             document.getElementById('shareBtn').style.display = 'block';
         }
 
         function shareResult() {
-            // Text zusammenbauen
             const status = (guesses[guesses.length - 1] === targetWord) ? guesses.length : "X";
             let text = `🟩 **Custom Wordle Challenge**\nVersuch: ${status}/${MAX_GUESSES}\n\n`;
             text += shareGrid.join("\n");
 
-            // In die Zwischenablage kopieren
             navigator.clipboard.writeText(text).then(() => {
-                alert("Ergebnis in die Zwischenablage kopiert! Du kannst es jetzt bei Discord einfügen.");
-            }).catch(err => {
-                alert("Fehler beim Kopieren: ", err);
+                alert("Ergebnis kopiert! Füge es bei Discord ein.");
             });
         }
     </script>
