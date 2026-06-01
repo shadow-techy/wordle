@@ -46,6 +46,10 @@
         const WORD_LENGTH = targetWord.length;
         const MAX_GUESSES = 6;
         let guesses = [];
+
+        const inputField = document.getElementById('guessInput'):
+        inputField.maxLength = WORD_LENGTH;
+        inputField.placeholder = '${WORD_LENGTH} Buchstaben';
         
         // Spielfeld aufbauen
         const gameDiv = document.getElementById('game');
