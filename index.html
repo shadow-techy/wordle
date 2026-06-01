@@ -6,7 +6,7 @@
     <title>Dein Custom Wordle</title>
     <style>
         body { font-family: Arial, sans-serif; background: #121213; color: white; text-align: center; }
-        #game { max-width: 400px; margin: 20px auto; }
+        #game { max-width: 600px; margin: 20px auto; }
         .row { display: flex; justify-content: center; margin-bottom: 5px; }
         .tile { width: 50px; height: 50px; border: 2px solid #3a3a3c; margin: 0 3px;
                 display: flex; align-items: center; justify-content: center; 
@@ -24,7 +24,7 @@
     <div id="game"></div>
     
     <div id="input-area">
-        <input type="text" id="guessInput", placeholder="Dein Tipp">
+        <input type="text" id="guessInput" placeholder="Dein Tipp">
         <button onclick="makeGuess()">Tippen</button>
     </div>
     <h2 id="message"></h2>
@@ -46,12 +46,13 @@
         const WORD_LENGTH = targetWord.length;
         const MAX_GUESSES = 6;
         let guesses = [];
-
-        const inputField = document.getElementById('guessInput'):
-        inputField.maxLength = WORD_LENGTH;
-        inputField.placeholder = '${WORD_LENGTH} Buchstaben';
         
-        // Spielfeld aufbauen
+        // DYNAMISCH: Setzt das Limit im Eingabefeld auf die Länge des echten Wortes
+        const inputField = document.getElementById('guessInput');
+        inputField.maxLength = WORD_LENGTH;
+        inputField.placeholder = `${WORD_LENGTH} Buchstaben`;
+
+        // Spielfeld dynamisch aufbauen (passt sich der Wortlänge an!)
         const gameDiv = document.getElementById('game');
         for (let i = 0; i < MAX_GUESSES; i++) {
             let row = document.createElement('div');
@@ -70,7 +71,7 @@
             let guess = input.value.toUpperCase().trim();
             
             if (guess.length !== WORD_LENGTH) {
-                alert(`Das Wort muss ${WORD_LENGTH} Buchstaben haben!`);
+                alert(`Das Wort muss exakt ${WORD_LENGTH} Buchstaben haben!`);
                 return;
             }
 
