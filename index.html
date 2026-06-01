@@ -88,7 +88,8 @@
         let targetWord = "APFEL"; 
         if (encodedWord) {
             try {
-                targetWord = decodeURIComponent(escape(atob(encodedWord))).toUpperCase();
+                let rawDecoded = atob(encodedWord).toUpperCase();
+                targetWord = rawDecoded.replace(/AE/g, "Ä").replace(/OE/g, "Ö").replace(/UE/g, "Ü")
             } catch(e) {
                 console.error("Ungültiger Link");
             }
