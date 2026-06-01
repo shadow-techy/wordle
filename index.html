@@ -14,8 +14,11 @@
         .correct { background-color: #538d4e; border-color: #538d4e; }
         .present { background-color: #b59f3b; border-color: #b59f3b; }
         .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
-        input { font-size: 18px; padding: 10px; text-transform: uppercase; width: 200px; text-align: center; }
-        button { font-size: 18px; padding: 10px; cursor: pointer; }
+        input { font-size: 18px; padding: 10px; text-transform: uppercase; width: 200px; text-align: center; margin-bottom: 10px; }
+        button { font-size: 18px; padding: 10px; cursor: pointer; background: #538d4e; color: white; border: none; font-weight: bold; border-radius: 5px; }
+        button:hover { background: #43733f; }
+        #shareBtn { display: none; margin: 20px auto; background: #007eed; }
+        #shareBtn:hover { background: #0065be; }
     </style>
 </head>
 <body>
@@ -25,16 +28,18 @@
     
     <div id="input-area">
         <input type="text" id="guessInput" placeholder="Dein Tipp">
+        <br>
         <button onclick="makeGuess()">Tippen</button>
     </div>
+
     <h2 id="message"></h2>
+    <button id="shareBtn" onclick="shareResult()">📊 Ergebnis teilen</button>
 
     <script>
-        // Wort aus dem Link auslesen und entschlüsseln (Base64)
         const urlParams = new URLSearchParams(window.location.search);
         const encodedWord = urlParams.get('w');
         
-        let targetWord = "APFEL"; // Standardwort, falls kein Link genutzt wurde
+        let targetWord = "APFEL"; 
         if (encodedWord) {
             try {
                 targetWord = atob(encodedWord).toUpperCase();
@@ -46,13 +51,12 @@
         const WORD_LENGTH = targetWord.length;
         const MAX_GUESSES = 6;
         let guesses = [];
-        
-        // DYNAMISCH: Setzt das Limit im Eingabefeld auf die Länge des echten Wortes
+        let shareGrid = []; // Speichert die Emoji-Quadrate für das Teilen
+
         const inputField = document.getElementById('guessInput');
         inputField.maxLength = WORD_LENGTH;
         inputField.placeholder = `${WORD_LENGTH} Buchstaben`;
 
-        // Spielfeld dynamisch aufbauen (passt sich der Wortlänge an!)
         const gameDiv = document.getElementById('game');
         for (let i = 0; i < MAX_GUESSES; i++) {
             let row = document.createElement('div');
@@ -81,6 +85,8 @@
             guesses.push(guess);
             input.value = "";
 
+            let rowEmojis = "";
+
             // Buchstaben prüfen und färben
             for (let i = 0; i < WORD_LENGTH; i++) {
                 let tile = document.getElementById(`tile-${currentRow}-${i}`);
@@ -88,21 +94,46 @@
 
                 if (guess[i] === targetWord[i]) {
                     tile.classList.add('correct');
+                    rowEmojis += "🟩";
                 } else if (targetWord.includes(guess[i])) {
                     tile.classList.add('present');
+                    rowEmojis += "🟨";
                 } else {
                     tile.classList.add('absent');
+                    rowEmojis += "⬛";
                 }
             }
+            
+            shareGrid.push(rowEmojis);
 
             // Gewinn / Verlust prüfen
             if (guess === targetWord) {
                 document.getElementById('message').innerText = "🎉 Gewonnen!";
-                document.getElementById('input-area').style.display = 'none';
+                endGame();
             } else if (guesses.length >= MAX_GUESSES) {
                 document.getElementById('message').innerText = `😢 Verloren! Das Wort war: ${targetWord}`;
-                document.getElementById('input-area').style.display = 'none';
+                endGame();
             }
+        }
+
+        function endGame() {
+            document.getElementById('input-area').style.display = 'none';
+            // Zeigt den Teilen-Button an, wenn das Spiel vorbei ist
+            document.getElementById('shareBtn').style.display = 'block';
+        }
+
+        function shareResult() {
+            // Text zusammenbauen
+            const status = (guesses[guesses.length - 1] === targetWord) ? guesses.length : "X";
+            let text = `🟩 **Custom Wordle Challenge**\nVersuch: ${status}/${MAX_GUESSES}\n\n`;
+            text += shareGrid.join("\n");
+
+            // In die Zwischenablage kopieren
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Ergebnis in die Zwischenablage kopiert! Du kannst es jetzt bei Discord einfügen.");
+            }).catch(err => {
+                alert("Fehler beim Kopieren: ", err);
+            });
         }
     </script>
 </body>
