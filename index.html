@@ -158,23 +158,43 @@
         function submitGuess() {
             let currentRow = guesses.length;
             guesses.push(currentGuess);
-            let rowEmojis = "";
+            
+            let tileStatuses = Array(WORD_LENGTH).fill("absent");
+            let targetLettersUsed = Array(WORD_LENGTH).fill(false);
+            let guessLettersUsed = Array(WORD_LENGTH).fill(false);
 
-            // Buchstaben prüfen, färben und Tastatur updaten
+            // 1. DURCHGANG: Suche nach exakten Treffern (GRÜN)
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                if (currentGuess[i] === targetWord[i]) {
+                    tileStatuses[i] = "correct";
+                    targetLettersUsed[i] = true;
+                    guessLettersUsed[i] = true;
+                }
+            }
+
+            // 2. DURCHGANG: Suche nach falschen Platzierungen (GELB)
+            for (let i = 0; i < WORD_LENGTH; i++) {
+                if (guessLettersUsed[i]) continue; // Überspringen, da bereits grün
+
+                for (let j = 0; j < WORD_LENGTH; j++) {
+                    if (!targetLettersUsed[j] && currentGuess[i] === targetWord[j]) {
+                        tileStatuses[i] = "present";
+                        targetLettersUsed[j] = true; // Buchstabe im Zielwort als verbraucht markieren
+                        break;
+                    }
+                }
+            }
+
+            // UI-Update: Kacheln einfärben und Emojis für das Teilen bauen
+            let rowEmojis = "";
             for (let i = 0; i < WORD_LENGTH; i++) {
                 let letter = currentGuess[i];
                 let tile = document.getElementById(`tile-${currentRow}-${i}`);
-                
-                let statusClass = "absent";
-                if (letter === targetWord[i]) {
-                    statusClass = "correct";
-                    rowEmojis += "🟩";
-                } else if (targetWord.includes(letter)) {
-                    statusClass = "present";
-                    rowEmojis += "🟨";
-                } else {
-                    rowEmojis += "⬛";
-                }
+                let statusClass = tileStatuses[i];
+
+                if (statusClass === "correct") rowEmojis += "🟩";
+                else if (statusClass === "present") rowEmojis += "🟨";
+                else rowEmojis += "⬛";
 
                 tile.classList.add(statusClass);
                 updateKeyboardKey(letter, statusClass);
@@ -182,6 +202,7 @@
 
             shareGrid.push(rowEmojis);
 
+            // Spielende prüfen
             if (currentGuess === targetWord) {
                 document.getElementById('message').innerText = "🎉 Gewonnen!";
                 endGame();
